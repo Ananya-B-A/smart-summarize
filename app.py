@@ -8,7 +8,7 @@ import docx
 app = Flask(__name__)
 CORS(app)
 
-summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
 
 def extract_text_from_file(file):
     text = ""
@@ -60,5 +60,8 @@ def summarize():
     ]
     return jsonify({"summary": " ".join(summaries)})
 
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
