@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SmartSummarize</title>
+    <link rel="stylesheet" type="text/css" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Upload your document or enter text:</h2>
+        <input type="file" id="file" />
+        <br><br>
+        <textarea id="text" placeholder="Or enter your text here..." rows="6" cols="60"></textarea>
+        <br><br>
+        <button onclick="summarize()">Summarize</button>
+
+        <div id="spinner" style="display:none;">
+            <p>Summarizing...</p>
+            <div class="loader"></div>
+        </div>
+
+        <div id="summary"></div>
+    </div>
+
+    <script>
+        async function summarize() {
+            const fileInput = document.getElementById('file');
+            const textInput = document.getElementById('text');
+            const summaryDiv = document.getElementById('summary');
+            const spinner = document.getElementById('spinner');
+
+            summaryDiv.innerHTML = "";
+            spinner.style.display = "block";
+
+            let response;
+            if (fileInput.files.length > 0) {
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                response = await fetch('/summarize', {
+                    method: 'POST',
+                    body: formData
+                });
+            } else if (textInput.value.trim()) {
+                response = await fetch('/summarize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: textInput.value })
+                });
+            } else {
+                spinner.style.display = "none";
+                summaryDiv.innerHTML = "Please provide text or upload a file.";
+                return;
+            }
+
+            try {
+                const data = await response.json();
+                spinner.style.display = "none";
+                if (data.summary) {
+                    summaryDiv.innerText = data.summary;
+                } else {
+                    summaryDiv.innerText = "Error: " + data.error;
+                }
+            } catch (err) {
+                spinner.style.display = "none";
+                summaryDiv.innerText = "Error: Invalid response from server.";
+            }
+        }
+    </script>
+</body>
+</html>
