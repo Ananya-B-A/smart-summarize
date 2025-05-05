@@ -5,7 +5,7 @@ import os
 import PyPDF2
 import docx
 
-app = Flask(__name__)
+app = Flask(__name__)  # ✅ Fixed
 CORS(app)
 
 summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
@@ -60,9 +60,6 @@ def summarize():
     ]
     return jsonify({"summary": " ".join(summaries)})
 
-
-if __name__ == "__main__":
-    import os
+if __name__ == "__main__":  # ✅ Fixed
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
-
