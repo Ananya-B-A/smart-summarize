@@ -3,6 +3,4 @@ flask-cors
 transformers
 torch
 PyPDF2
-python-docx
-
-
+gunicorn
