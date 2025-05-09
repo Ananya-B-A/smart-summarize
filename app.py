@@ -1,49 +1,49 @@
 import logging
 import gradio as gr
-from summarizer import summarize_document
+from summarizer import summarize_document, extract_text_from_file
 
-# Setup logging
+# Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] - %(message)s",
-    handlers=[logging.StreamHandler()]
+    format="%(asctime)s [%(levelname)s] - %(message)s"
 )
 
-def handle_summary(text: str, size: str) -> str:
-    """
-    Handles summarization based on user input.
-    
-    Args:
-        text (str): Full input document text.
-        size (str): Summary size - Small, Medium, Large.
-    
-    Returns:
-        str: Generated summary or error message.
-    """
+def handle_summary(text: str, size: str, file) -> str:
     try:
-        if not text.strip():
-            return "❗ Please enter some text to summarize."
+        content = text.strip()
+        if file:
+            content = extract_text_from_file(file)
+            if not content:
+                return "❌ Could not extract text from the file. Please try another file."
 
-        summary = summarize_document(text, size)
-        logging.info(f"Generated a {size.lower()} summary.")
+        if not content:
+            return "❗ Please enter text or upload a valid file."
+
+        summary = summarize_document(content, size)
         return summary
-
     except Exception as e:
-        logging.exception("Error while generating summary:")
-        return f"❌ An unexpected error occurred: {str(e)}"
+        logging.exception("Error during summarization")
+        return f"❌ Error: {e}"
 
 def launch_ui():
-    """Launches the Gradio interface."""
     with gr.Blocks(title="Smart Summarizer", theme=gr.themes.Soft()) as app:
-        gr.Markdown("# 🧠 Smart Document Summarizer")
-        gr.Markdown("Paste a large document below and select the desired summary length.")
+        gr.Markdown("# 📄 Smart Document Summarizer")
+        gr.Markdown("Upload a `.pdf`, `.docx`, or `.txt` file or paste your text, then choose summary length.")
 
-        input_text = gr.Textbox(lines=20, label="📄 Input Document")
-        size_option = gr.Radio(choices=["Small", "Medium", "Large"], value="Medium", label="📝 Summary Length")
-        output_text = gr.Textbox(lines=10, label="📃 Summary")
+        with gr.Row():
+            input_text = gr.Textbox(label="📝 Paste Text Here", lines=15, placeholder="Or upload a file below...")
+        
+        with gr.Row():
+            file_upload = gr.File(label="📎 Upload File", file_types=[".pdf", ".docx", ".txt"])
+        
+        with gr.Row():
+            size_option = gr.Radio(choices=["Small", "Medium", "Large"], label="🧠 Summary Length", value="Medium")
+        
+        with gr.Row():
+            output_text = gr.Textbox(label="📃 Summary", lines=10)
 
         summarize_btn = gr.Button("✨ Generate Summary")
-        summarize_btn.click(fn=handle_summary, inputs=[input_text, size_option], outputs=output_text)
+        summarize_btn.click(fn=handle_summary, inputs=[input_text, size_option, file_upload], outputs=output_text)
 
     app.launch()
 
